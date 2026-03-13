@@ -401,7 +401,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 2rem;
+    padding: 6rem 2rem 2rem;
   }
 
   .hero-coin {
@@ -547,18 +547,19 @@
   .cta-primary span { position: relative; z-index: 1; }
 
   .scroll-hint {
-    position: absolute;
-    bottom: 2.5rem;
+    margin-top: auto;
+    padding-bottom: 2rem;
     font-size: 0.7rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--text-dim);
     animation: bob 2s ease-in-out infinite;
+    pointer-events: none;
   }
 
   @keyframes bob {
-    0%, 100% { transform: translateY(0); opacity: 0.5; }
-    50% { transform: translateY(8px); opacity: 1; }
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(6px); opacity: 0.8; }
   }
 
   /* ─── SECTIONS SHARED ─── */
