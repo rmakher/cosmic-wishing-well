@@ -1445,7 +1445,7 @@
     </button>
 
     <div class="terms-note">
-      By casting, you agree this is for <a href="#" onclick="event.preventDefault()">entertainment only</a>. All donations are non-refundable.
+      By casting, you agree this is for <a href="/terms.html">entertainment only</a>. All donations are non-refundable.
     </div>
   </div>
 </section>
@@ -1548,8 +1548,8 @@
 <footer>
   <div class="footer-logo">Cosmic Wishing Well</div>
   <div class="footer-links">
-    <a href="#">Terms</a>
-    <a href="#">Privacy</a>
+    <a href="/terms.html">Terms</a>
+    <a href="/privacy.html">Privacy</a>
     <a href="#">Support</a>
   </div>
   <div class="footer-copy">&copy; 2026 Cosmic Wishing Well. All donations are for entertainment purposes only.</div>
@@ -1988,6 +1988,472 @@
     }
   });
   observer.observe(document.querySelector('.hero-stats'));
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FIREBASE + REAL FEATURES
+     - Real wish stream (saved to Firestore)
+     - Live stats from database
+     - 3D rotating globe with wish locations
+     - User dashboard (access wishes by email)
+     ═══════════════════════════════════════════════════════════ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDGkHmWPGD84ke429ERRoC6Ee9yYKWnPPs",
+    authDomain: "cosmic-wishing-well.firebaseapp.com",
+    projectId: "cosmic-wishing-well",
+    storageBucket: "cosmic-wishing-well.firebasestorage.app",
+    messagingSenderId: "713054710895",
+    appId: "1:713054710895:web:97d07f7f1660d00b54319a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ─── LOAD REAL WISHES FROM FIREBASE ───
+  async function loadWishes() {
+    try {
+      const q = query(collection(db, 'wishes'), orderBy('createdAt', 'desc'), limit(20));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) return; // Keep sample wishes if DB is empty
+
+      const stream = document.getElementById('wish-stream');
+      stream.innerHTML = '';
+
+      snapshot.forEach((doc, i) => {
+        const w = doc.data();
+        const tier = w.tier || 'whisper';
+        const timeAgo = getTimeAgo(w.createdAt?.toDate?.() || new Date());
+
+        stream.innerHTML += `
+          <div class="wish-card" style="animation-delay: ${i * 0.06}s">
+            <div class="wish-card-header">
+              <span class="wish-author">${escapeHtml(w.name || 'Anonymous')}</span>
+              <span class="wish-tier-badge badge-${tier}">${tier}</span>
+            </div>
+            <div class="wish-text">"${escapeHtml(w.wish)}"</div>
+            <div class="wish-meta">
+              <span class="wish-time">${timeAgo}</span>
+              <span class="wish-amount">$${w.amount || '?'}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      // Also populate globe dots
+      snapshot.forEach(doc => {
+        const w = doc.data();
+        if (w.lat && w.lng) {
+          globeWishes.push({ lat: w.lat, lng: w.lng, name: w.name });
+        }
+      });
+    } catch (e) {
+      console.log('Firestore read:', e.message);
+    }
+  }
+
+  // ─── LOAD LIVE STATS ───
+  async function loadStats() {
+    try {
+      const wishesSnap = await getCountFromServer(collection(db, 'wishes'));
+      const count = wishesSnap.data().count;
+      if (count > 0) {
+        document.getElementById('stat-wishes').textContent = count.toLocaleString();
+      }
+    } catch (e) {
+      console.log('Stats:', e.message);
+    }
+  }
+
+  // ─── SAVE WISH TO FIREBASE (called after successful payment) ───
+  window.saveWishToFirebase = async function(wishData) {
+    try {
+      await addDoc(collection(db, 'wishes'), {
+        name: wishData.name || 'Anonymous',
+        wish: wishData.wish,
+        amount: wishData.amount,
+        tier: wishData.tier || 'whisper',
+        email: wishData.email || '',
+        oracle: wishData.oracle || false,
+        lat: wishData.lat || null,
+        lng: wishData.lng || null,
+        country: wishData.country || '',
+        createdAt: new Date(),
+        granted: false
+      });
+    } catch (e) {
+      console.log('Save wish:', e.message);
+    }
+  };
+
+  // ─── USER DASHBOARD — LOAD WISHES BY EMAIL ───
+  window.loadMyWishes = async function(email) {
+    try {
+      const q = query(collection(db, 'wishes'), where('email', '==', email), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const container = document.getElementById('dashboard-wishes');
+
+      if (snapshot.empty) {
+        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; padding:2rem;">No wishes found for this email.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      snapshot.forEach(doc => {
+        const w = doc.data();
+        const date = w.createdAt?.toDate?.() || new Date();
+        container.innerHTML += `
+          <div style="background:var(--deep); border:1px solid rgba(201,168,76,0.08); border-radius:14px; padding:1.25rem 1.5rem; margin-bottom:0.75rem;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+              <span style="font-size:0.72rem; color:var(--gold-dim); text-transform:uppercase; letter-spacing:0.08em;">${w.tier || 'whisper'}</span>
+              <span style="font-size:0.72rem; color:var(--text-dim);">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            </div>
+            <p style="font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-style:italic; color:#e0ddd5; line-height:1.6;">"${escapeHtml(w.wish)}"</p>
+            <div style="margin-top:0.6rem; font-size:0.75rem; color:var(--text-dim);">$${w.amount} · ${w.granted ? '✨ Granted' : '🌙 In the cosmos'}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('dashboard-count').textContent = snapshot.size;
+    } catch (e) {
+      console.log('Dashboard:', e.message);
+      document.getElementById('dashboard-wishes').innerHTML = '<p style="color:var(--text-dim); text-align:center; padding:2rem;">Could not load wishes. Please try again.</p>';
+    }
+  };
+
+  // ─── HELPERS ───
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return Math.floor(seconds / 60) + ' min ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+    if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
+    return date.toLocaleDateString();
+  }
+
+  // ─── SAVE WISH ON RETURN FROM STRIPE ───
+  (async function handleReturn() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      const wish = params.get('wish');
+      const name = params.get('name') || 'Anonymous';
+      if (wish) {
+        // Try to get location
+        let lat = null, lng = null, country = '';
+        try {
+          const geo = await fetch('https://ipapi.co/json/');
+          const geoData = await geo.json();
+          lat = geoData.latitude;
+          lng = geoData.longitude;
+          country = geoData.country_name;
+        } catch(e) {}
+
+        await window.saveWishToFirebase({ name, wish, amount: 5, tier: 'whisper', lat, lng, country });
+      }
+    }
+  })();
+
+  // ─── GLOBE WISHES DATA ───
+  window.globeWishes = [];
+
+  // ─── INIT ───
+  loadWishes();
+  loadStats();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     3D GLOBE VISUALIZATION
+     Interactive rotating globe showing wish locations
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+  .globe-section {
+    position: relative;
+    z-index: 2;
+    padding: 6rem 2rem;
+    text-align: center;
+  }
+  #globe-canvas {
+    width: 100%;
+    max-width: 500px;
+    height: 500px;
+    margin: 0 auto;
+    cursor: grab;
+  }
+  #globe-canvas:active { cursor: grabbing; }
+
+  /* Dashboard modal */
+  .dash-overlay {
+    position: fixed; inset: 0;
+    background: rgba(6,6,10,0.88);
+    backdrop-filter: blur(12px);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  .dash-overlay.show { opacity: 1; pointer-events: all; }
+  .dash-box {
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 90%; max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .dash-overlay.show .dash-box { transform: translateY(0); }
+  .dash-title { font-family: var(--serif); font-size: 1.5rem; font-weight: 300; color: #fff; margin-bottom: 0.5rem; }
+  .dash-sub { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1.5rem; font-weight: 200; }
+  .dash-email-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .dash-email-row input {
+    flex: 1; padding: 0.8rem 1rem;
+    background: var(--deep); border: 1px solid rgba(201,168,76,0.12); border-radius: 10px;
+    color: var(--text); font-family: var(--sans); font-size: 0.88rem; outline: none;
+  }
+  .dash-email-row input:focus { border-color: var(--gold-dim); }
+  .dash-email-row button {
+    padding: 0.8rem 1.2rem; background: var(--gold-dim); border: none; border-radius: 10px;
+    color: var(--ink); font-family: var(--sans); font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+  }
+  .dash-close {
+    position: absolute; top: 1rem; right: 1.2rem;
+    background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;
+  }
+  .dash-stat { font-family: var(--serif); font-size: 1.8rem; color: var(--gold); }
+</style>
+
+<!-- Globe Section (between Wish Stream and FAQ) -->
+<script>
+  // Insert globe section before the FAQ
+  const faqSection = document.getElementById('about');
+  if (faqSection) {
+    const globeHTML = `
+      <section class="globe-section">
+        <div class="section-label">Global Dreamers</div>
+        <h2 class="section-title" style="margin-bottom:0.5rem;">Wishes Around the World</h2>
+        <p class="section-desc">Every dot is a wish from someone, somewhere on Earth.</p>
+        <canvas id="globe-canvas"></canvas>
+      </section>
+    `;
+    faqSection.insertAdjacentHTML('beforebegin', globeHTML);
+
+    // ─── GLOBE RENDERER ───
+    const gc = document.getElementById('globe-canvas');
+    const gctx = gc.getContext('2d');
+    let gw, gh, rotation = 0, isDragging = false, lastDragX = 0, dragVelocity = 0;
+
+    function resizeGlobe() {
+      const rect = gc.parentElement.getBoundingClientRect();
+      const size = Math.min(rect.width - 40, 500);
+      gc.width = size * 2;
+      gc.height = size * 2;
+      gc.style.width = size + 'px';
+      gc.style.height = size + 'px';
+      gw = gc.width;
+      gh = gc.height;
+    }
+    resizeGlobe();
+    window.addEventListener('resize', resizeGlobe);
+
+    // Mouse drag
+    gc.addEventListener('mousedown', e => { isDragging = true; lastDragX = e.clientX; });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('mousemove', e => {
+      if (isDragging) {
+        dragVelocity = (e.clientX - lastDragX) * 0.003;
+        rotation += dragVelocity;
+        lastDragX = e.clientX;
+      }
+    });
+
+    // Touch drag
+    gc.addEventListener('touchstart', e => { isDragging = true; lastDragX = e.touches[0].clientX; });
+    gc.addEventListener('touchend', () => { isDragging = false; });
+    gc.addEventListener('touchmove', e => {
+      if (isDragging) {
+        dragVelocity = (e.touches[0].clientX - lastDragX) * 0.003;
+        rotation += dragVelocity;
+        lastDragX = e.touches[0].clientX;
+      }
+    });
+
+    // Convert lat/lng to 3D point
+    function latLngTo3D(lat, lng, r) {
+      const phi = (90 - lat) * Math.PI / 180;
+      const theta = (lng + rotation * 180 / Math.PI) * Math.PI / 180;
+      return {
+        x: r * Math.sin(phi) * Math.cos(theta),
+        y: r * Math.cos(phi),
+        z: r * Math.sin(phi) * Math.sin(theta)
+      };
+    }
+
+    // Sample wish locations (supplemented by real data from Firebase)
+    const defaultLocations = [
+      { lat: 40.7, lng: -74, name: 'New York' }, { lat: 51.5, lng: -0.1, name: 'London' },
+      { lat: -33.8, lng: 151.2, name: 'Sydney' }, { lat: 35.6, lng: 139.7, name: 'Tokyo' },
+      { lat: 48.8, lng: 2.3, name: 'Paris' }, { lat: 19.4, lng: -99.1, name: 'Mexico City' },
+      { lat: -23.5, lng: -46.6, name: 'São Paulo' }, { lat: 55.7, lng: 37.6, name: 'Moscow' },
+      { lat: 28.6, lng: 77.2, name: 'Delhi' }, { lat: 31.2, lng: 121.4, name: 'Shanghai' },
+      { lat: 6.5, lng: 3.3, name: 'Lagos' }, { lat: -1.2, lng: 36.8, name: 'Nairobi' },
+      { lat: 1.3, lng: 103.8, name: 'Singapore' }, { lat: 25.2, lng: 55.2, name: 'Dubai' },
+      { lat: 14.5, lng: 121.0, name: 'Manila' }, { lat: -34.6, lng: -58.3, name: 'Buenos Aires' },
+      { lat: 37.5, lng: 127.0, name: 'Seoul' }, { lat: 52.5, lng: 13.4, name: 'Berlin' },
+      { lat: 43.6, lng: -79.3, name: 'Toronto' }, { lat: -33.9, lng: 18.4, name: 'Cape Town' },
+      { lat: 34.0, lng: -118.2, name: 'Los Angeles' }, { lat: 41.9, lng: 12.5, name: 'Rome' },
+      { lat: 59.3, lng: 18.0, name: 'Stockholm' }, { lat: 33.8, lng: -7.5, name: 'Casablanca' },
+    ];
+
+    function drawGlobe() {
+      gctx.clearRect(0, 0, gw, gh);
+      const cx = gw / 2, cy = gh / 2, r = Math.min(gw, gh) * 0.38;
+
+      // Globe shadow
+      const shadow = gctx.createRadialGradient(cx + r * 0.3, cy + r * 0.3, 0, cx, cy, r * 1.3);
+      shadow.addColorStop(0, 'rgba(0,0,0,0)');
+      shadow.addColorStop(1, 'rgba(0,0,0,0.4)');
+      gctx.fillStyle = shadow;
+      gctx.fillRect(0, 0, gw, gh);
+
+      // Globe body
+      const bodyGrad = gctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, 0, cx, cy, r);
+      bodyGrad.addColorStop(0, 'rgba(30, 35, 50, 0.9)');
+      bodyGrad.addColorStop(0.7, 'rgba(15, 18, 30, 0.95)');
+      bodyGrad.addColorStop(1, 'rgba(8, 10, 18, 1)');
+      gctx.beginPath();
+      gctx.arc(cx, cy, r, 0, Math.PI * 2);
+      gctx.fillStyle = bodyGrad;
+      gctx.fill();
+
+      // Globe edge glow
+      gctx.beginPath();
+      gctx.arc(cx, cy, r, 0, Math.PI * 2);
+      gctx.strokeStyle = 'rgba(201, 168, 76, 0.12)';
+      gctx.lineWidth = 1.5;
+      gctx.stroke();
+
+      // Grid lines (longitude)
+      for (let lng = -180; lng < 180; lng += 30) {
+        gctx.beginPath();
+        gctx.strokeStyle = 'rgba(201, 168, 76, 0.04)';
+        gctx.lineWidth = 1;
+        for (let lat = -90; lat <= 90; lat += 2) {
+          const p = latLngTo3D(lat, lng, r);
+          if (p.z > 0) {
+            const sx = cx + p.x;
+            const sy = cy - p.y;
+            lat === -90 ? gctx.moveTo(sx, sy) : gctx.lineTo(sx, sy);
+          }
+        }
+        gctx.stroke();
+      }
+
+      // Grid lines (latitude)
+      for (let lat = -60; lat <= 60; lat += 30) {
+        gctx.beginPath();
+        gctx.strokeStyle = 'rgba(201, 168, 76, 0.04)';
+        gctx.lineWidth = 1;
+        for (let lng = -180; lng <= 180; lng += 2) {
+          const p = latLngTo3D(lat, lng, r);
+          if (p.z > 0) {
+            const sx = cx + p.x;
+            const sy = cy - p.y;
+            lng === -180 ? gctx.moveTo(sx, sy) : gctx.lineTo(sx, sy);
+          }
+        }
+        gctx.stroke();
+      }
+
+      // Wish dots
+      const allLocations = [...defaultLocations, ...(window.globeWishes || [])];
+      allLocations.forEach((loc, i) => {
+        const p = latLngTo3D(loc.lat, loc.lng, r);
+        if (p.z > 0) {
+          const sx = cx + p.x;
+          const sy = cy - p.y;
+          const alpha = 0.3 + (p.z / r) * 0.7;
+          const pulse = Math.sin(Date.now() * 0.002 + i) * 0.3 + 0.7;
+
+          // Glow
+          gctx.beginPath();
+          gctx.arc(sx, sy, 6 * pulse, 0, Math.PI * 2);
+          gctx.fillStyle = `rgba(201, 168, 76, ${alpha * 0.15})`;
+          gctx.fill();
+
+          // Dot
+          gctx.beginPath();
+          gctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+          gctx.fillStyle = `rgba(232, 212, 139, ${alpha})`;
+          gctx.fill();
+        }
+      });
+
+      // Atmosphere glow
+      const atmo = gctx.createRadialGradient(cx, cy, r * 0.95, cx, cy, r * 1.15);
+      atmo.addColorStop(0, 'rgba(201, 168, 76, 0.05)');
+      atmo.addColorStop(1, 'transparent');
+      gctx.fillStyle = atmo;
+      gctx.beginPath();
+      gctx.arc(cx, cy, r * 1.15, 0, Math.PI * 2);
+      gctx.fill();
+
+      // Auto-rotate
+      if (!isDragging) {
+        rotation += 0.003;
+        dragVelocity *= 0.95;
+      }
+
+      requestAnimationFrame(drawGlobe);
+    }
+    drawGlobe();
+  }
+</script>
+
+<!-- Dashboard Modal -->
+<div class="dash-overlay" id="dashboard-overlay">
+  <div class="dash-box" style="position:relative;">
+    <button class="dash-close" onclick="document.getElementById('dashboard-overlay').classList.remove('show')">&times;</button>
+    <div class="dash-title">Your Wishes</div>
+    <div class="dash-sub">Enter the email you used when casting your wishes.</div>
+    <div class="dash-email-row">
+      <input type="email" id="dash-email" placeholder="you@universe.com">
+      <button onclick="window.loadMyWishes(document.getElementById('dash-email').value)">Look Up</button>
+    </div>
+    <div style="text-align:center; margin-bottom:1.5rem;">
+      <span class="dash-stat" id="dashboard-count">0</span>
+      <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.12em; margin-top:0.25rem;">Wishes Found</div>
+    </div>
+    <div id="dashboard-wishes"></div>
+  </div>
+</div>
+
+<!-- Add Dashboard link to nav -->
+<script>
+  // Add "Your Wishes" to nav
+  const navLinks = document.querySelector('.nav-links');
+  if (navLinks) {
+    const dashLink = document.createElement('a');
+    dashLink.href = '#';
+    dashLink.textContent = 'Your Wishes';
+    dashLink.onclick = (e) => {
+      e.preventDefault();
+      document.getElementById('dashboard-overlay').classList.add('show');
+    };
+    navLinks.appendChild(dashLink);
+  }
 </script>
 
 <!-- NOSCRIPT FALLBACK -->
