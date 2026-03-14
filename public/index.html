@@ -1036,38 +1036,70 @@
   .how-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    max-width: 900px;
+    gap: 1.5rem;
+    max-width: 960px;
     margin: 0 auto;
   }
 
   .how-card {
     text-align: center;
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 2rem;
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,0.06);
+    border-radius: 20px;
+    transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .how-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .how-card:hover {
+    border-color: rgba(201,168,76,0.12);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 30px rgba(201,168,76,0.04);
+  }
+
+  .how-card:hover::before { opacity: 1; }
+
+  .how-icon {
+    font-size: 2rem;
+    margin-bottom: 1.25rem;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(201,168,76,0.3));
   }
 
   .how-num {
     font-family: var(--serif);
-    font-size: 3rem;
-    font-weight: 300;
-    color: rgba(201,168,76,0.2);
-    margin-bottom: 1rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--gold-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
   }
 
   .how-title {
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text);
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: #fff;
     margin-bottom: 0.75rem;
   }
 
   .how-desc {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 200;
     color: var(--text-dim);
-    line-height: 1.65;
+    line-height: 1.7;
   }
 
   /* ─── FOOTER ─── */
@@ -1326,27 +1358,39 @@
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(6,6,10,0.96);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(6,6,10,0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2rem;
+      gap: 0.75rem;
       z-index: 99;
     }
     .nav-links.open {
       display: flex;
     }
     .nav-links a {
-      font-size: 1.1rem;
-      letter-spacing: 0.15em;
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      padding: 1rem 2.5rem;
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 12px;
+      width: 240px;
+      text-align: center;
+      transition: all 0.3s;
+      background: rgba(201,168,76,0.03);
+    }
+    .nav-links a:hover, .nav-links a:active {
+      border-color: var(--gold);
+      background: rgba(201,168,76,0.08);
+      color: var(--gold);
     }
     .hero-stats { gap: 1.5rem; }
     .wish-form { padding: 2rem 1.5rem; }
     .tier-selector { grid-template-columns: 1fr; }
     .form-row { grid-template-columns: 1fr; }
-    .how-grid { grid-template-columns: 1fr; gap: 0; }
+    .how-grid { grid-template-columns: 1fr; gap: 1rem; }
     section { padding: 5rem 1.5rem; }
     .stream-filters { flex-wrap: wrap; }
     .footer-seo-nav { display: none; }
@@ -1404,19 +1448,22 @@
   <p class="section-desc">Three steps. One wish. Infinite possibility.</p>
   <div class="how-grid">
     <div class="how-card reveal">
-      <div class="how-num">01</div>
+      <span class="how-icon">✍️</span>
+      <div class="how-num">Step One</div>
       <div class="how-title">Write Your Wish</div>
-      <div class="how-desc">Speak it into existence. What would you wish for if you knew someone — something — was listening?</div>
+      <div class="how-desc">Speak it into existence. What would you wish for if you knew the universe was listening? Be specific. Be bold. Be honest.</div>
     </div>
     <div class="how-card reveal reveal-delay-1">
-      <div class="how-num">02</div>
+      <span class="how-icon">🪙</span>
+      <div class="how-num">Step Two</div>
       <div class="how-title">Toss a Coin</div>
-      <div class="how-desc">Every wish needs weight. Choose an amount — from $1 to whatever feels right — and cast it into the well.</div>
+      <div class="how-desc">Every wish needs weight. Starting at $1, choose an amount that feels right. Upgrade to Glow or Supernova to amplify your wish in the stream.</div>
     </div>
     <div class="how-card reveal reveal-delay-2">
-      <div class="how-num">03</div>
-      <div class="how-title">Let It Ripple</div>
-      <div class="how-desc">Your wish joins thousands of others in the cosmic stream. Watch it glow, get boosted, and maybe — come true.</div>
+      <span class="how-icon">🌊</span>
+      <div class="how-num">Step Three</div>
+      <div class="how-title">Watch It Ripple</div>
+      <div class="how-desc">Your wish joins thousands of others from around the world. See it glow in the stream, appear on the globe, and send its energy into the cosmos.</div>
     </div>
   </div>
 </section>
@@ -1854,12 +1901,6 @@
   }, { threshold: 0.15 });
   revealEls.forEach(el => revealObserver.observe(el));
 
-  // ─── TIER SELECTOR ───
-  function selectTier(el) {
-    document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-  }
-
   // ─── AMOUNT ───
   function setAmount(val, btn) {
     document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
@@ -1876,7 +1917,7 @@
   function castWish() {
     const name = document.getElementById('wisher-name').value || 'Anonymous';
     const wish = document.getElementById('wish-text').value;
-    const amount = document.getElementById('custom-amount').value;
+    let amount = parseFloat(document.getElementById('custom-amount').value) || 1;
     const oracleActive = document.getElementById('oracle-toggle').classList.contains('active');
     const tierEl = document.querySelector('.tier-card.active');
     const tier = tierEl ? tierEl.dataset.tier : 'whisper';
@@ -1888,14 +1929,19 @@
       return;
     }
 
-    // Calculate total (add $5 for oracle if selected)
-    let total = parseFloat(amount) || 5;
+    // Enforce tier minimums
+    if (tier === 'glow' && amount < 11) amount = 11;
+    if (tier === 'supernova' && amount < 50) amount = 50;
+    if (amount < 1) amount = 1;
+
+    // Add oracle fee
+    let total = amount;
     if (oracleActive) total += 5;
 
     // Show loading state
     const btn = document.querySelector('.submit-btn');
-    const originalText = btn.textContent;
-    btn.textContent = '✦ Connecting to the cosmos...';
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✦ Connecting to the cosmos...';
     btn.style.opacity = '0.7';
     btn.style.pointerEvents = 'none';
 
@@ -1908,7 +1954,8 @@
     .then(res => res.json())
     .then(data => {
       if (data.url) {
-        // Redirect to Stripe Checkout
+        // Store wish data in sessionStorage for after payment
+        sessionStorage.setItem('pendingWish', JSON.stringify({ name, wish, amount: total, tier, oracle: oracleActive }));
         window.location.href = data.url;
       } else {
         throw new Error(data.error || 'Something went wrong');
@@ -1916,11 +1963,35 @@
     })
     .catch(err => {
       console.error(err);
-      btn.textContent = originalText;
+      btn.innerHTML = originalText;
       btn.style.opacity = '1';
       btn.style.pointerEvents = 'auto';
       alert('Something went wrong. Please try again.');
     });
+  }
+
+  // ─── TIER SELECTION — update amount when tier changes ───
+  function selectTier(el) {
+    document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const tier = el.dataset.tier;
+    const amountInput = document.getElementById('custom-amount');
+    const currentAmount = parseFloat(amountInput.value) || 0;
+
+    // Set minimum amount for the selected tier
+    if (tier === 'glow' && currentAmount < 11) {
+      amountInput.value = 11;
+      document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+    }
+    if (tier === 'supernova' && currentAmount < 50) {
+      amountInput.value = 50;
+      document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+    }
+
+    // Update submit button text to show tier
+    const btn = document.querySelector('.submit-btn');
+    const tierNames = { whisper: 'Whisper', glow: 'Glow ✦', supernova: 'Supernova ☄️' };
+    btn.innerHTML = `🪙 Cast ${tierNames[tier] || ''} Wish Into the Well`;
   }
 
   // ─── CHECK FOR RETURN FROM STRIPE ───
@@ -2029,10 +2100,15 @@
       const pinnedLabel = isPinned ? '<span style="font-size:0.65rem; color:var(--gold); margin-left:0.5rem;">📌 PINNED</span>' : '';
       const glowStyle = w.tier === 'glow' ? 'border-left:2px solid rgba(201,168,76,0.3);' : '';
       const hasLocation = w.lat && w.lng;
-      const locationHint = hasLocation ? `<span style="font-size:0.68rem; color:var(--text-dim); cursor:pointer;" onclick="openGlobe(${w.lat},${w.lng},'${(w.country||'').replace(/'/g,"\\'")}')">📍 ${w.country || 'Earth'}</span>` : '';
+      const escapedWish = (w.wish||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const escapedName = (w.name||'Anonymous').replace(/'/g,"\\'");
+      const escapedCountry = (w.country||'Earth').replace(/'/g,"\\'");
+      const locationHint = hasLocation ? `<span style="font-size:0.68rem; color:var(--text-dim);">📍 ${w.country || 'Earth'}</span>` : '';
+      const clickHandler = hasLocation ? `onclick="openGlobe(${w.lat},${w.lng},'${escapedCountry}','${escapedWish}','${escapedName}','${w.tier}','${w.amount}')"` : '';
+      const cursorStyle = hasLocation ? 'cursor:pointer;' : '';
 
       return `
-      <div class="wish-card" style="animation-delay:${i*0.06}s; ${pinnedStyle} ${glowStyle}" ${hasLocation ? `onclick="openGlobe(${w.lat},${w.lng},'${(w.country||'').replace(/'/g,"\\'")}')" style="cursor:pointer;"` : ''}>
+      <div class="wish-card" style="animation-delay:${i*0.06}s; ${pinnedStyle} ${glowStyle} ${cursorStyle}" ${clickHandler}>
         <div class="wish-card-header">
           <span class="wish-author">${w.name}${pinnedLabel}</span>
           <span class="wish-tier-badge badge-${w.tier}">${w.tier}</span>
@@ -2067,10 +2143,24 @@
   });
 
   // ─── GLOBE MODAL ───
-  window.openGlobe = function(highlightLat, highlightLng, country) {
+  window.openGlobe = function(highlightLat, highlightLng, country, wishText, wishAuthor, wishTier, wishAmount) {
     document.getElementById('globe-overlay').classList.add('show');
-    document.getElementById('globe-location-name').textContent = country || 'Somewhere on Earth';
+    document.getElementById('globe-location-name').textContent = '📍 ' + (country || 'Somewhere on Earth');
     window._globeHighlight = { lat: highlightLat, lng: highlightLng };
+
+    // Show wish detail if provided
+    const detailEl = document.getElementById('globe-wish-detail');
+    if (wishText) {
+      document.getElementById('globe-wish-title').textContent = 'A Wish From ' + (country || 'the Cosmos');
+      document.getElementById('globe-wish-text').textContent = '"' + wishText + '"';
+      document.getElementById('globe-wish-author').textContent = wishAuthor || 'Anonymous';
+      document.getElementById('globe-wish-tier').textContent = wishTier || 'whisper';
+      document.getElementById('globe-wish-amount').textContent = wishAmount ? '$' + wishAmount : '';
+      detailEl.style.display = 'block';
+    } else {
+      detailEl.style.display = 'none';
+    }
+
     if (!window._globeStarted) {
       window._globeStarted = true;
       startGlobe();
@@ -2476,14 +2566,24 @@
   .dash-stat { font-family: var(--serif); font-size: 1.8rem; color: var(--gold); }
 </style>
 
-<!-- Globe Modal (popup, not a section) -->
+<!-- Globe + Wish Detail Modal (popup) -->
 <div class="globe-overlay" id="globe-overlay">
   <button class="globe-close" onclick="document.getElementById('globe-overlay').classList.remove('show')">&times;</button>
   <div class="globe-header">
-    <h3>Wish Location</h3>
+    <h3 id="globe-wish-title">A Wish From the Cosmos</h3>
     <p id="globe-location-name">Somewhere on Earth</p>
   </div>
   <canvas id="globe-canvas" width="800" height="800" style="width:400px;height:400px;"></canvas>
+  <div id="globe-wish-detail" style="text-align:center; max-width:440px; margin-top:1.5rem; display:none;">
+    <div style="background:var(--surface); border:1px solid rgba(201,168,76,0.1); border-radius:16px; padding:1.5rem 2rem;">
+      <p id="globe-wish-text" style="font-family:var(--serif); font-size:1.15rem; font-style:italic; color:#e0ddd5; line-height:1.6; margin-bottom:1rem;"></p>
+      <div style="display:flex; justify-content:center; gap:2rem; font-size:0.75rem; color:var(--text-dim);">
+        <span id="globe-wish-author">Anonymous</span>
+        <span id="globe-wish-tier" style="color:var(--gold-dim); text-transform:uppercase; letter-spacing:0.08em;"></span>
+        <span id="globe-wish-amount"></span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Dashboard Modal -->
